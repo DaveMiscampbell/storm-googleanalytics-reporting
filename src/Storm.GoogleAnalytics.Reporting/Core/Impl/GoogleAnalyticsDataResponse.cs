@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using AutoMapper;
+using AutoMapper.Data;
+using AutoMapper.Mappers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -44,8 +46,15 @@ namespace Storm.GoogleAnalytics.Reporting.Core.Impl
         {
             try
             {
+                var config = new MapperConfiguration(cfg =>
+                {
+                    MapperRegistry.Mappers.Add(new DataReaderMapper { YieldReturnEnabled = true });
+                });
+
+                var mapper = config.CreateMapper();
+
                 return AsDataTable() != null
-                    ? Mapper.DynamicMap<IDataReader, IEnumerable<TEntity>>(AsDataTable().CreateDataReader())
+                    ? mapper.Map<IDataReader, IEnumerable<TEntity>>(AsDataTable().CreateDataReader())
                     : Enumerable.Empty<TEntity>();
             }
             catch (Exception ex)
