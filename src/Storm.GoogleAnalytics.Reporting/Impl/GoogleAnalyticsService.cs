@@ -73,7 +73,7 @@ namespace Storm.GoogleAnalytics.Reporting.Impl
                 {
                     var gRequest = AnalyticsRequest(svc, requestConfig);
 
-                    var data = await gRequest.ExecuteAsync();
+                    GaData data = await gRequest.ExecuteAsync();
                     var dt = ToDataTable(data, data.ProfileInfo.ProfileName);
 
                     while (data.NextLink != null && data.Rows != null)

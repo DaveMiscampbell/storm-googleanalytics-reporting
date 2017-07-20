@@ -23,7 +23,7 @@ namespace Storm.GoogleAnalytics.Reporting.Core
         /// <summary>
         /// Attempts to output the query result as a strongly typed object
         /// </summary>
-        /// <remarks>This method will using a AutoMapper profile if one has been added to the global Mapper object, otherwise will attempt to dynamically map the query result to the specified type</remarks>
+        /// <remarks>This method will using a AutoMapper profile if one has been added to the global Mapper object, otherwise it will throw</remarks>
         /// <typeparam name="TEntity">Type into which the query result should be mapped</typeparam>
         /// <returns>List of objects each containing a single query result item</returns>
         IEnumerable<TEntity> ToObject<TEntity>();

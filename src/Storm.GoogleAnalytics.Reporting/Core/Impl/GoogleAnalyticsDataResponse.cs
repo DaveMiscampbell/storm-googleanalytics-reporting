@@ -11,7 +11,7 @@ namespace Storm.GoogleAnalytics.Reporting.Core.Impl
     public sealed class GoogleAnalyticsDataResponse : IGoogleAnalyticsDataResponse
     {
         private DataTable _data;
-        internal GoogleAnalyticsDataResponse(DataTable data, bool hasSampledData)
+        public GoogleAnalyticsDataResponse(DataTable data, bool hasSampledData)
         {
             HasSampledData = hasSampledData;
             _data = data;
@@ -45,7 +45,7 @@ namespace Storm.GoogleAnalytics.Reporting.Core.Impl
             try
             {
                 return AsDataTable() != null
-                    ? Mapper.DynamicMap<IDataReader, IEnumerable<TEntity>>(AsDataTable().CreateDataReader())
+                    ? Mapper.Map<IDataReader, IEnumerable<TEntity>>(AsDataTable().CreateDataReader())
                     : Enumerable.Empty<TEntity>();
             }
             catch (Exception ex)
