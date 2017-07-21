@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storm.GoogleAnalytics.Repor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storm.GoogleAnalyticsReporting.Tests", "Storm.GoogleAnalyticsReporting.Tests\Storm.GoogleAnalyticsReporting.Tests.csproj", "{D12587BF-EF8F-4671-A3B5-958043774CAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMapper.Data", "AutoMapper.Data\AutoMapper.Data.csproj", "{89E9D4F5-9482-4384-A00F-F99590D3E5FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D12587BF-EF8F-4671-A3B5-958043774CAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D12587BF-EF8F-4671-A3B5-958043774CAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D12587BF-EF8F-4671-A3B5-958043774CAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89E9D4F5-9482-4384-A00F-F99590D3E5FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89E9D4F5-9482-4384-A00F-F99590D3E5FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89E9D4F5-9482-4384-A00F-F99590D3E5FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89E9D4F5-9482-4384-A00F-F99590D3E5FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

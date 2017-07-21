@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using NUnit.Framework;
+using Storm.GoogleAnalytics.Reporting;
 using Storm.GoogleAnalytics.Reporting.Core.Impl;
 
 namespace Storm.GoogleAnalyticsReporting.Tests
@@ -15,6 +16,7 @@ namespace Storm.GoogleAnalyticsReporting.Tests
 
         protected override void SharedContext()
         {
+            StormGoogleAnalyticsReporting.Init();
             Data = BuildDataTable();
             DataResponse = new GoogleAnalyticsDataResponse(Data, false);
         }
