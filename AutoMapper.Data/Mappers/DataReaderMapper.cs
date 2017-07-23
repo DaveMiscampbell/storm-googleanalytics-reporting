@@ -17,7 +17,7 @@
         private static readonly ConcurrentDictionary<BuilderKey, Build> BuilderCache = new ConcurrentDictionary<BuilderKey, Build>();
         private static readonly ConcurrentDictionary<Type, CreateEnumerableAdapter> EnumerableAdapterCache = new ConcurrentDictionary<Type, CreateEnumerableAdapter>();
 
-        public bool YieldReturnEnabled { get; }
+        public bool YieldReturnEnabled { get; set; }
 
         public object Map(ResolutionContext context)
         {

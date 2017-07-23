@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
+using AutoMapper;
 using NUnit.Framework;
 using Storm.GoogleAnalytics.Reporting;
 using Storm.GoogleAnalytics.Reporting.Core.Impl;
@@ -88,6 +89,7 @@ namespace Storm.GoogleAnalyticsReporting.Tests
         [Test]
         public void should_return_correct_data()
         {
+            Mapper.CreateMap<IDataReader, TestDataTableRow>();
             var objects = DataResponse.ToObject<TestDataTableRow>().ToList();
 
             var firstPerson = objects.First();
