@@ -89,7 +89,7 @@ namespace Storm.GoogleAnalyticsReporting.Tests
         [Test]
         public void should_return_correct_data()
         {
-            Mapper.CreateMap<IDataReader, TestDataTableRow>();
+            Mapper.Initialize(cfg => cfg.CreateMap<IDataReader, TestDataTableRow>());
             var objects = DataResponse.ToObject<TestDataTableRow>().ToList();
 
             var firstPerson = objects.First();
