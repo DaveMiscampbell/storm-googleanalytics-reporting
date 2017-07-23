@@ -1,5 +1,5 @@
 #tool "GitVersion.CommandLine"
-#tool "xunit.runner.console"
+#tool "nuget:?package=NUnit.ConsoleRunner"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -9,13 +9,15 @@ var target                  = Argument("target", "Default");
 var configuration           = Argument("configuration", "Release");
 var solutionPath            = MakeAbsolute(File(Argument("solutionPath", "./Storm.GoogleAnalytics.sln")));
 
-var testProjects            = Enumerable.Empty<string>();
+var testProjects            = new[] {
+    "Storm.GoogleAnalyticsReporting.Tests"
+};
 
 //////////////////////////////////////////////////////////////////////
 // PREPARATION
 //////////////////////////////////////////////////////////////////////
 
-var testAssemblyBinFormat   = "./tests/{0}/bin/" +configuration +"/{0}.dll";
+var testAssemblyBinFormat   = "./{0}/bin/" +configuration +"/{0}.dll";
 
 var artifacts               = MakeAbsolute(Directory(Argument("artifactPath", "./artifacts")));
 var buildOutput             = MakeAbsolute(Directory(artifacts +"/build/"));
@@ -119,8 +121,22 @@ Task("Run-Unit-Tests")
 {
     var testResultsPath = MakeAbsolute(Directory(artifacts + "/test-results"));
 
-    XUnit2(testProjects.Select(x => string.Format(testAssemblyBinFormat, x)), new XUnit2Settings() {
-        OutputDirectory = testResultsPath
+    EnsureDirectoryExists(testResultsPath);
+
+    NuGetInstall("NUnit.Console", new NuGetInstallSettings() {
+        OutputDirectory = "./tools",
+        ExcludeVersion = true,
+        Verbosity = NuGetVerbosity.Quiet
+    });    
+
+    var testResults = File(testResultsPath + @"\test-results.xml");
+
+    NUnit3(testProjects.Select(x => string.Format(testAssemblyBinFormat, x)), new NUnit3Settings {
+        NoHeader = true,
+        Configuration = configuration,
+        ResultFormat = "nunit3",
+        X86 = false,
+        Results = testResults
     });
 });
 

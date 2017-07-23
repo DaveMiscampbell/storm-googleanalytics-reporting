@@ -17,6 +17,10 @@ namespace Storm.GoogleAnalyticsReporting.Tests
 
         protected override void SharedContext()
         {
+            Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<IDataReader, TestDataTableRow>();
+            });
             StormGoogleAnalyticsReporting.Init();
             Data = BuildDataTable();
             DataResponse = new GoogleAnalyticsDataResponse(Data, false);
@@ -89,7 +93,6 @@ namespace Storm.GoogleAnalyticsReporting.Tests
         [Test]
         public void should_return_correct_data()
         {
-            Mapper.Initialize(cfg => cfg.CreateMap<IDataReader, TestDataTableRow>());
             var objects = DataResponse.ToObject<TestDataTableRow>().ToList();
 
             var firstPerson = objects.First();
