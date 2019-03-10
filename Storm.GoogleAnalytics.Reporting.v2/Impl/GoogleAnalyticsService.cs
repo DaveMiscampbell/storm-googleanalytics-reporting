@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -64,6 +66,9 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
                 try
                 {
                     var request = AnalyticsRequest(service, requestConfig);
+
+                    var data = await service.Reports.BatchGet(request).ExecuteAsync();
+                    var dataTable = ToDataTable(data);
                 }
             }
         }
@@ -84,6 +89,72 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
         {
             var metrics = string.Join(",", requestConfig.Metrics.Select(GaMetadata.WithPrefix));
             var dimensions = string.Join(",", requestConfig.Dimensions.Select(GaMetadata.WithPrefix));
+
+            var requestBody = new GetReportsRequest
+            {
+
+            };
+
+            var gaRequest = service.Reports.BatchGet()
+        }
+
+        private DataTable ToDataTable(GetReportsResponse response, string name = "GA")
+        {
+            var requestResultTable = new DataTable(name);
+            var report = response?.Reports.FirstOrDefault();
+            if (report != null)
+            {
+                requestResultTable.Columns.AddRange(report.ColumnHeader.MetricHeader.MetricHeaderEntries.Select(x=> new DataColumn(x.Name, GetDataType(x))).ToArray());
+
+                if (report.Data?.Rows != null)
+                {
+                    foreach (var row in report.Data.Rows)
+                    {
+
+                        var dataTableRow = requestResultTable.NewRow();
+
+                        for (var index = 0; index != requestResultTable.Columns.Count; index++)
+                        {
+                            var column = requestResultTable.Columns[index];
+                            if (column.DataType == typeof(DateTime))
+                            {
+                                
+                            }
+                            else
+                            {
+                                
+                            }
+                        }
+
+                        requestResultTable.Rows.Add(dataTableRow);
+                    }
+                }
+
+                requestResultTable.AcceptChanges();
+            }
+
+            return requestResultTable;
+        }
+
+        private static Type GetDataType(MetricHeaderEntry gaColumn)
+        {
+            switch (gaColumn.Type.ToLowerInvariant())
+            {
+                case "integer":
+                    return typeof(int);
+                case "double":
+                    return typeof(double);
+                case "currency":
+                    return typeof(decimal);
+                case "time":
+                    return typeof(float);
+                default:
+                    if (gaColumn.Name.ToLowerInvariant().Equals(GaMetadata.WithPrefix(GaMetadata.Dimensions.Time.Date)))
+                    {
+                        return typeof(DateTime);
+                    }
+                    return typeof(string);
+            }
         }
     }
 }
