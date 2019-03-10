@@ -141,9 +141,6 @@
     <None Include="packages.config" />
     <None Include="Storm.GoogleAnalytics.Reporting.nuspec" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="readme.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
