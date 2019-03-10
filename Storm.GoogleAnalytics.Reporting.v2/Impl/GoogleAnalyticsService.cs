@@ -12,6 +12,7 @@ using Google.Apis.Services;
 using Storm.GoogleAnalytics.Reporting.v2.Configuration;
 using Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl;
 using Storm.GoogleAnalytics.Reporting.v2.Core;
+using Storm.GoogleAnalytics.Reporting.v2.Core.Impl;
 
 namespace Storm.GoogleAnalytics.Reporting.v2.Impl
 {
@@ -69,6 +70,14 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
 
                     var data = await service.Reports.BatchGet(request).ExecuteAsync();
                     var dataTable = ToDataTable(data);
+
+                    // Paging
+
+                    return new GoogleAnalyticsResponse(requestConfig, true, new GoogleAnalyticsDataResponse(dataTable));
+                }
+                catch (Exception ex)
+                {
+                    return new GoogleAnalyticsResponse(requestConfig, false, errorResponse: new GoogleAnalyticsErrorResponse(ex.Message, ex));
                 }
             }
         }
