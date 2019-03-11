@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography.X509Certificates;
-using Google.Apis.AnalyticsReporting.v4;
 
 namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
 {

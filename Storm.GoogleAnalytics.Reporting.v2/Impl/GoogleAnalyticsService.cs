@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using Google.Apis.AnalyticsReporting.v4;
-using Google.Apis.AnalyticsReporting.v4.Data;
+using Google.Apis.Analytics.v3;
+using Google.Apis.Analytics.v3.Data;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Services;
@@ -20,14 +20,14 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
     {
         public static IGoogleAnalyticsService Create(string serviceAccountId, X509Certificate2 certificate)
         {
-            return new GoogleAnalyticsService(x=>x
+            return new GoogleAnalyticsService(x => x
                 .WithServiceAccountId(serviceAccountId)
                 .WithServiceAccountCertificate(certificate));
         }
 
         public static IGoogleAnalyticsService Create(string serviceAccountId, string certificateAbsolutePath, string certificatePassword = "notasecret")
         {
-            return new GoogleAnalyticsService(x=>x
+            return new GoogleAnalyticsService(x => x
                 .WithServiceAccountId(serviceAccountId)
                 .WithServiceAccountCertificate(certificateAbsolutePath, certificatePassword));
         }
@@ -68,13 +68,23 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
                 {
                     var request = AnalyticsRequest(service, requestConfig);
 
-                    var data = await service.Reports.BatchGet(request).ExecuteAsync();
-                    var dataTable = ToDataTable(data);
-                    
+                    var data = await request.ExecuteAsync();
 
-                    // Paging
+                    var dataTable = ToDataTable(data, data.ProfileInfo.ProfileName);
 
-                    return new GoogleAnalyticsResponse(requestConfig, true, new GoogleAnalyticsDataResponse(dataTable, data.Reports.First().Data.SamplesReadCounts.Any() && data.Reports.First().Data.SamplingSpaceSizes.Any()));
+                    while (data.NextLink != null && data.Rows != null)
+                    {
+                        if (requestConfig.MaxResults < 10000 && data.Rows.Count <= requestConfig.MaxResults)
+                        {
+                            break;
+                        }
+
+                        request.StartIndex = (request.StartIndex ?? 1) + data.Rows.Count;
+                        data = await request.ExecuteAsync();
+                        dataTable.Merge(ToDataTable(data));
+                    }
+
+                    return new GoogleAnalyticsResponse(requestConfig, true, new GoogleAnalyticsDataResponse(dataTable, data.ContainsSampledData.GetValueOrDefault(false)));
                 }
                 catch (Exception ex)
                 {
@@ -83,54 +93,48 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
             }
         }
 
-        private AnalyticsReportingService AnalyticsService =>
-            new AnalyticsReportingService(new BaseClientService.Initializer
+        private AnalyticsService AnalyticsService =>
+            new AnalyticsService(new BaseClientService.Initializer
             {
                 ApplicationName = string.Concat(_serviceConfiguration.ApplicationName, _serviceConfiguration.GZipEnabled ? " (gzip)" : ""),
                 GZipEnabled = _serviceConfiguration.GZipEnabled,
                 DefaultExponentialBackOffPolicy = ExponentialBackOffPolicy.Exception,
                 HttpClientInitializer = new ServiceAccountCredential(new ServiceAccountCredential.Initializer(_serviceConfiguration.ServiceAccountId)
                 {
-                    Scopes = new [] { _serviceConfiguration.Scope }
+                    Scopes = new[] { _serviceConfiguration.Scope }
                 }.FromCertificate(_serviceConfiguration.ServiceAccountCertificate))
             });
 
-        private GetReportsRequest AnalyticsRequest(AnalyticsReportingService service, IGoogleAnalyticsRequestConfiguration requestConfig)
+        private DataResource.GaResource.GetRequest AnalyticsRequest(AnalyticsService service, IGoogleAnalyticsRequestConfiguration requestConfig)
         {
             var metrics = string.Join(",", requestConfig.Metrics.Select(GaMetadata.WithPrefix));
             var dimensions = string.Join(",", requestConfig.Dimensions.Select(GaMetadata.WithPrefix));
 
-            var request = new ReportRequest
-            {
-                ViewId = requestConfig.ProfileId,
-                DateRanges = new List<DateRange>
-                {
-                    new DateRange {StartDate = requestConfig.StartDate.ToString("yyyy-MM-dd"), EndDate = requestConfig.EndDate.ToString("yyyy-MM-dd")}
-                },
-                Metrics = requestConfig.Metrics.Select(x => new Metric {Expression = GaMetadata.WithPrefix(x)}).ToList(),
-                Dimensions = requestConfig.Dimensions.Select(x => new Dimension {Name = GaMetadata.WithPrefix(x)}).ToList(),
-                PageSize = requestConfig.MaxResults
-                // Filtering
-                // Sorting
-                // Segmenting
-            };
+            var request = service.Data.Ga.Get(
+                GaMetadata.WithPrefix(requestConfig.ProfileId),
+                requestConfig.StartDate.ToString("yyyy-MM-dd"),
+                requestConfig.EndDate.ToString("yyyy-MM-dd"),
+                metrics);
+            request.Dimensions = dimensions;
+            request.MaxResults = requestConfig.MaxResults;
+            request.Filters = requestConfig.Filter;
+            request.Sort = requestConfig.Sort;
+            request.Segment = requestConfig.Segment;
 
-            return new GetReportsRequest {ReportRequests = new List<ReportRequest> {request}};
+            return request;
         }
 
-        private static DataTable ToDataTable(GetReportsResponse response, string name = "GA")
+        private static DataTable ToDataTable(GaData response, string name = "GA")
         {
             var requestResultTable = new DataTable(name);
-            var report = response?.Reports.FirstOrDefault();
-            if (report != null)
+            if (response != null)
             {
-                requestResultTable.Columns.AddRange(report.ColumnHeader.MetricHeader.MetricHeaderEntries.Select(x=> new DataColumn(x.Name, GetDataType(x))).ToArray());
+                requestResultTable.Columns.AddRange(response.ColumnHeaders.Select(x => new DataColumn(x.Name, GetDataType(x))).ToArray());
 
-                if (report.Data?.Rows != null)
+                if (response.Rows != null)
                 {
-                    foreach (var row in report.Data.Rows)
+                    foreach (var row in response.Rows)
                     {
-
                         var dataTableRow = requestResultTable.NewRow();
 
                         for (var index = 0; index != requestResultTable.Columns.Count; index++)
@@ -138,11 +142,11 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
                             var column = requestResultTable.Columns[index];
                             if (column.DataType == typeof(DateTime))
                             {
-                                // Set Field
+                                dataTableRow.SetField(column, DateTime.ParseExact(row[index], "yyyyMMdd", CultureInfo.InvariantCulture));
                             }
                             else
                             {
-                                // Set Field
+                                dataTableRow.SetField(column, row[index]);
                             }
                         }
 
@@ -156,9 +160,9 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
             return requestResultTable;
         }
 
-        private static Type GetDataType(MetricHeaderEntry gaColumn)
+        private static Type GetDataType(GaData.ColumnHeadersData gaColumn)
         {
-            switch (gaColumn.Type.ToLowerInvariant())
+            switch (gaColumn.DataType.ToLowerInvariant())
             {
                 case "integer":
                     return typeof(int);

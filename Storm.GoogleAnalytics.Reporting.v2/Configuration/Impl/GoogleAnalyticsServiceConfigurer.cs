@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using Google.Apis.AnalyticsReporting.v4;
+using Google.Apis.Analytics.v3;
 
 namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
 {
@@ -10,7 +10,7 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
     {
         public GoogleAnalyticsServiceConfigurer()
         {
-            Scope = AnalyticsReportingService.Scope.AnalyticsReadonly;
+            Scope = AnalyticsService.Scope.AnalyticsReadonly;
             ApplicationName = string.Empty;
             GZipEnabled = true;
         }
@@ -84,7 +84,7 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
 
         public IGoogleAnalyticsServiceConfigurer WithScope(string value)
         {
-            Scope = string.IsNullOrWhiteSpace(value) ? AnalyticsReportingService.Scope.AnalyticsReadonly : value;
+            Scope = string.IsNullOrWhiteSpace(value) ? AnalyticsService.Scope.AnalyticsReadonly : value;
             return this;
         }
 
@@ -109,10 +109,10 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
         {
             if (string.IsNullOrWhiteSpace(Scope))
             {
-                Scope = AnalyticsReportingService.Scope.AnalyticsReadonly;
+                Scope = AnalyticsService.Scope.AnalyticsReadonly;
             }
 
-            if (!IsOneOf(Scope, AnalyticsReportingService.Scope.Analytics, AnalyticsReportingService.Scope.AnalyticsReadonly))
+            if (!IsOneOf(Scope, AnalyticsService.Scope.Analytics, AnalyticsService.Scope.AnalyticsEdit, AnalyticsService.Scope.AnalyticsManageUsers, AnalyticsService.Scope.AnalyticsReadonly))
             {
                 return $"Invalid analytics scope : [{Scope}]";
             }
