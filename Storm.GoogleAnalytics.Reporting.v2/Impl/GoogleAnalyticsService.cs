@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -70,10 +70,11 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
 
                     var data = await service.Reports.BatchGet(request).ExecuteAsync();
                     var dataTable = ToDataTable(data);
+                    
 
                     // Paging
 
-                    return new GoogleAnalyticsResponse(requestConfig, true, new GoogleAnalyticsDataResponse(dataTable));
+                    return new GoogleAnalyticsResponse(requestConfig, true, new GoogleAnalyticsDataResponse(dataTable, data.Reports.First().Data.SamplesReadCounts.Any() && data.Reports.First().Data.SamplingSpaceSizes.Any()));
                 }
                 catch (Exception ex)
                 {
@@ -99,15 +100,25 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
             var metrics = string.Join(",", requestConfig.Metrics.Select(GaMetadata.WithPrefix));
             var dimensions = string.Join(",", requestConfig.Dimensions.Select(GaMetadata.WithPrefix));
 
-            var requestBody = new GetReportsRequest
+            var request = new ReportRequest
             {
-
+                ViewId = requestConfig.ProfileId,
+                DateRanges = new List<DateRange>
+                {
+                    new DateRange {StartDate = requestConfig.StartDate.ToString("yyyy-MM-dd"), EndDate = requestConfig.EndDate.ToString("yyyy-MM-dd")}
+                },
+                Metrics = requestConfig.Metrics.Select(x => new Metric {Expression = GaMetadata.WithPrefix(x)}).ToList(),
+                Dimensions = requestConfig.Dimensions.Select(x => new Dimension {Name = GaMetadata.WithPrefix(x)}).ToList(),
+                PageSize = requestConfig.MaxResults
+                // Filtering
+                // Sorting
+                // Segmenting
             };
 
-            var gaRequest = service.Reports.BatchGet()
+            return new GetReportsRequest {ReportRequests = new List<ReportRequest> {request}};
         }
 
-        private DataTable ToDataTable(GetReportsResponse response, string name = "GA")
+        private static DataTable ToDataTable(GetReportsResponse response, string name = "GA")
         {
             var requestResultTable = new DataTable(name);
             var report = response?.Reports.FirstOrDefault();
@@ -127,11 +138,11 @@ namespace Storm.GoogleAnalytics.Reporting.v2.Impl
                             var column = requestResultTable.Columns[index];
                             if (column.DataType == typeof(DateTime))
                             {
-                                
+                                // Set Field
                             }
                             else
                             {
-                                
+                                // Set Field
                             }
                         }
 
