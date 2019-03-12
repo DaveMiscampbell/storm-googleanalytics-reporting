@@ -1,50 +1,47 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Google.Apis.Analytics.v3;
 using Google.Apis.Analytics.v3.Data;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Services;
-using Storm.GoogleAnalytics.Reporting.Configuration;
-using Storm.GoogleAnalytics.Reporting.Configuration.Impl;
-using Storm.GoogleAnalytics.Reporting.Core;
-using Storm.GoogleAnalytics.Reporting.Core.Impl;
-using System.Security.Cryptography.X509Certificates;
+using Storm.GoogleAnalytics.Reporting.v2.Configuration;
+using Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl;
+using Storm.GoogleAnalytics.Reporting.v2.Core;
+using Storm.GoogleAnalytics.Reporting.v2.Core.Impl;
 
-namespace Storm.GoogleAnalytics.Reporting.Impl
+namespace Storm.GoogleAnalytics.Reporting.v2.Impl
 {
     public sealed class GoogleAnalyticsService : IGoogleAnalyticsService
     {
         public static IGoogleAnalyticsService Create(string serviceAccountId, X509Certificate2 certificate)
         {
-            return new GoogleAnalyticsService(c => c
+            return new GoogleAnalyticsService(x => x
                 .WithServiceAccountId(serviceAccountId)
                 .WithServiceAccountCertificate(certificate));
         }
 
         public static IGoogleAnalyticsService Create(string serviceAccountId, string certificateAbsolutePath, string certificatePassword = "notasecret")
         {
-            return new GoogleAnalyticsService(c => c
+            return new GoogleAnalyticsService(x => x
                 .WithServiceAccountId(serviceAccountId)
                 .WithServiceAccountCertificate(certificateAbsolutePath, certificatePassword));
         }
 
         private readonly IGoogleAnalyticsServiceConfiguration _serviceConfiguration;
 
-        public GoogleAnalyticsService(
-            Func<IGoogleAnalyticsServiceConfigurer, IGoogleAnalyticsServiceConfigurer> configurer)
+        public GoogleAnalyticsService(Func<IGoogleAnalyticsServiceConfigurer, IGoogleAnalyticsServiceConfigurer> configurer)
         {
             var config = new GoogleAnalyticsServiceConfigurer();
             configurer(config);
             _serviceConfiguration = config.Build();
         }
 
-
-        public IGoogleAnalyticsResponse Query(
-            Func<IGoogleAnalyticsRequestConfigurerProfileId, IGoogleAnalyticsRequestConfigurerProfileId> configurer)
+        public IGoogleAnalyticsResponse Query(Func<IGoogleAnalyticsRequestConfigurerProfileId, IGoogleAnalyticsRequestConfigurerProfileId> configurer)
         {
             var config = new GoogleAnalyticsRequestConfigurer();
             configurer(config);
@@ -56,9 +53,7 @@ namespace Storm.GoogleAnalytics.Reporting.Impl
             return Task.Run(() => QueryAsync(requestConfig)).Result;
         }
 
-        #region async methods
-        public async Task<IGoogleAnalyticsResponse> QueryAsync(
-            Func<IGoogleAnalyticsRequestConfigurerProfileId, IGoogleAnalyticsRequestConfigurerProfileId> configurer)
+        public async Task<IGoogleAnalyticsResponse> QueryAsync(Func<IGoogleAnalyticsRequestConfigurerProfileId, IGoogleAnalyticsRequestConfigurerProfileId> configurer)
         {
             var config = new GoogleAnalyticsRequestConfigurer();
             configurer(config);
@@ -67,14 +62,15 @@ namespace Storm.GoogleAnalytics.Reporting.Impl
 
         public async Task<IGoogleAnalyticsResponse> QueryAsync(IGoogleAnalyticsRequestConfiguration requestConfig)
         {
-            using (var svc = AnalyticsService)
+            using (var service = AnalyticsService)
             {
                 try
                 {
-                    var gRequest = AnalyticsRequest(svc, requestConfig);
+                    var request = AnalyticsRequest(service, requestConfig);
 
-                    var data = await gRequest.ExecuteAsync();
-                    var dt = ToDataTable(data, data.ProfileInfo.ProfileName);
+                    var data = await request.ExecuteAsync();
+
+                    var dataTable = ToDataTable(data, data.ProfileInfo.ProfileName);
 
                     while (data.NextLink != null && data.Rows != null)
                     {
@@ -82,63 +78,86 @@ namespace Storm.GoogleAnalytics.Reporting.Impl
                         {
                             break;
                         }
-                        gRequest.StartIndex = (gRequest.StartIndex ?? 1) + data.Rows.Count;
-                        data = await gRequest.ExecuteAsync();
-                        dt.Merge(ToDataTable(data));
+
+                        request.StartIndex = (request.StartIndex ?? 1) + data.Rows.Count;
+                        data = await request.ExecuteAsync();
+                        dataTable.Merge(ToDataTable(data));
                     }
-                    return new GoogleAnalyticsResponse(requestConfig,
-                        true,
-                        new GoogleAnalyticsDataResponse(dt, data.ContainsSampledData.GetValueOrDefault(false)));
+
+                    return new GoogleAnalyticsResponse(requestConfig, true, new GoogleAnalyticsDataResponse(dataTable, data.ContainsSampledData.GetValueOrDefault(false)));
                 }
                 catch (Exception ex)
                 {
-                    return new GoogleAnalyticsResponse(requestConfig,
-                        false, errorResponse: new GoogleAnalyticsErrorResponse(ex.Message, ex));
+                    return new GoogleAnalyticsResponse(requestConfig, false, errorResponse: new GoogleAnalyticsErrorResponse(ex.Message, ex));
                 }
             }
         }
-        #endregion
 
-        #region Private
-        private AnalyticsService AnalyticsService
-        {
-            get
+        private AnalyticsService AnalyticsService =>
+            new AnalyticsService(new BaseClientService.Initializer
             {
-                return new AnalyticsService(new BaseClientService.Initializer
+                ApplicationName = string.Concat(_serviceConfiguration.ApplicationName, _serviceConfiguration.GZipEnabled ? " (gzip)" : ""),
+                GZipEnabled = _serviceConfiguration.GZipEnabled,
+                DefaultExponentialBackOffPolicy = ExponentialBackOffPolicy.Exception,
+                HttpClientInitializer = new ServiceAccountCredential(new ServiceAccountCredential.Initializer(_serviceConfiguration.ServiceAccountId)
                 {
-                    ApplicationName =
-                        string.Format("{0}{1}", _serviceConfiguration.ApplicationName,
-                            _serviceConfiguration.GZipEnabled ? " (gzip)" : ""),
-                    GZipEnabled = _serviceConfiguration.GZipEnabled,
-                    DefaultExponentialBackOffPolicy = ExponentialBackOffPolicy.Exception,
-                    HttpClientInitializer = new ServiceAccountCredential(
-                        new ServiceAccountCredential.Initializer(_serviceConfiguration.ServiceAccountId)
-                        {
-                            Scopes = new[] {_serviceConfiguration.Scope}
-                        }.FromCertificate(_serviceConfiguration.ServiceAccountCertificate)
-                        )
-                });
-            }
-        }
+                    Scopes = new[] { _serviceConfiguration.Scope }
+                }.FromCertificate(_serviceConfiguration.ServiceAccountCertificate))
+            });
 
         private DataResource.GaResource.GetRequest AnalyticsRequest(AnalyticsService service, IGoogleAnalyticsRequestConfiguration requestConfig)
         {
             var metrics = string.Join(",", requestConfig.Metrics.Select(GaMetadata.WithPrefix));
             var dimensions = string.Join(",", requestConfig.Dimensions.Select(GaMetadata.WithPrefix));
 
-            var gRequest = service.Data.Ga.Get(
+            var request = service.Data.Ga.Get(
                 GaMetadata.WithPrefix(requestConfig.ProfileId),
                 requestConfig.StartDate.ToString("yyyy-MM-dd"),
                 requestConfig.EndDate.ToString("yyyy-MM-dd"),
                 metrics);
+            request.Dimensions = dimensions;
+            request.MaxResults = requestConfig.MaxResults;
+            request.Filters = requestConfig.Filter;
+            request.Sort = requestConfig.Sort;
+            request.Segment = requestConfig.Segment;
 
-            gRequest.Dimensions = dimensions;
-            gRequest.MaxResults = requestConfig.MaxResults;
-            gRequest.Filters = requestConfig.Filter;
-            gRequest.Sort = requestConfig.Sort;
-            gRequest.Segment = requestConfig.Segment;
+            return request;
+        }
 
-            return gRequest;
+        private static DataTable ToDataTable(GaData response, string name = "GA")
+        {
+            var requestResultTable = new DataTable(name);
+            if (response != null)
+            {
+                requestResultTable.Columns.AddRange(response.ColumnHeaders.Select(x => new DataColumn(x.Name, GetDataType(x))).ToArray());
+
+                if (response.Rows != null)
+                {
+                    foreach (var row in response.Rows)
+                    {
+                        var dataTableRow = requestResultTable.NewRow();
+
+                        for (var index = 0; index != requestResultTable.Columns.Count; index++)
+                        {
+                            var column = requestResultTable.Columns[index];
+                            if (column.DataType == typeof(DateTime))
+                            {
+                                dataTableRow.SetField(column, DateTime.ParseExact(row[index], "yyyyMMdd", CultureInfo.InvariantCulture));
+                            }
+                            else
+                            {
+                                dataTableRow.SetField(column, row[index]);
+                            }
+                        }
+
+                        requestResultTable.Rows.Add(dataTableRow);
+                    }
+                }
+
+                requestResultTable.AcceptChanges();
+            }
+
+            return requestResultTable;
         }
 
         private static Type GetDataType(GaData.ColumnHeadersData gaColumn)
@@ -150,7 +169,7 @@ namespace Storm.GoogleAnalytics.Reporting.Impl
                 case "double":
                     return typeof(double);
                 case "currency":
-                    return typeof (decimal);
+                    return typeof(decimal);
                 case "time":
                     return typeof(float);
                 default:
@@ -161,43 +180,5 @@ namespace Storm.GoogleAnalytics.Reporting.Impl
                     return typeof(string);
             }
         }
-
-        private DataTable ToDataTable(GaData response, string name = "GA")
-        {
-            var requestResultTable = new DataTable(name);
-            if (response != null)
-            {
-                requestResultTable.Columns.AddRange(response.ColumnHeaders.Select(c => new DataColumn(GaMetadata.RemovePrefix(c.Name), GetDataType(c))).ToArray());
-
-                if (response.Rows != null)
-                {
-                    foreach (var row in response.Rows)
-                    {
-                        var dtRow = requestResultTable.NewRow();
-
-                        for (var idx = 0; idx != requestResultTable.Columns.Count; idx++)
-                        {
-                            var col = requestResultTable.Columns[idx];
-                            if (col.DataType == typeof(DateTime))
-                            {
-                                dtRow.SetField(col,
-                                    DateTime.ParseExact(row[idx], "yyyyMMdd", new DateTimeFormatInfo(),
-                                        DateTimeStyles.AssumeLocal));
-                            }
-                            else
-                            {
-                                dtRow.SetField(col, row[idx]);
-                            }
-                        }
-                        requestResultTable.Rows.Add(dtRow);
-                    }
-                }
-                requestResultTable.AcceptChanges();
-            }
-            return requestResultTable;
-        }
-        #endregion
-
-
     }
 }

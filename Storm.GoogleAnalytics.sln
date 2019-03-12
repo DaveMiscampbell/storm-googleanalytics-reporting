@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.438
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storm.GoogleAnalytics.Reporting", "src\Storm.GoogleAnalytics.Reporting\Storm.GoogleAnalytics.Reporting.csproj", "{3C96893C-A483-4070-9406-F3B9E7D37109}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Storm.GoogleAnalytics.Reporting.v2", "Storm.GoogleAnalytics.Reporting.v2\Storm.GoogleAnalytics.Reporting.v2.csproj", "{AEF3254B-45FF-436F-AFE7-6BF45FB78609}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Storm.GoogleAnalytics.Reporting", "src\Storm.GoogleAnalytics.Reporting\Storm.GoogleAnalytics.Reporting.csproj", "{3C96893C-A483-4070-9406-F3B9E7D37109}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{3C96893C-A483-4070-9406-F3B9E7D37109}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C96893C-A483-4070-9406-F3B9E7D37109}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C96893C-A483-4070-9406-F3B9E7D37109}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AEF3254B-45FF-436F-AFE7-6BF45FB78609}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AEF3254B-45FF-436F-AFE7-6BF45FB78609}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AEF3254B-45FF-436F-AFE7-6BF45FB78609}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AEF3254B-45FF-436F-AFE7-6BF45FB78609}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,20 +1,17 @@
-﻿namespace Storm.GoogleAnalytics.Reporting.Core
+﻿namespace Storm.GoogleAnalytics.Reporting.v2.Core
 {
     public static class GaMetadata
     {
         private const string Prefix = "ga:";
-        private const string RealtimePrefix = "rt:";
 
         public static string WithPrefix(string value)
         {
-            if (value.StartsWith(Prefix)) return value;
-            return string.Format("{0}{1}", Prefix, value);
-        }
+            if (value.StartsWith(Prefix))
+            {
+                return value;
+            }
 
-        public static string WithRealtimePrefix(string value)
-        {
-            if (value.StartsWith(RealtimePrefix)) return value;
-            return string.Format("{0}{1}", RealtimePrefix, value);
+            return string.Concat(Prefix, value);
         }
 
         public static string RemovePrefix(string value)
@@ -23,15 +20,7 @@
             {
                 return value.Substring(Prefix.Length);
             }
-            return value;
-        }
 
-        public static string RemoveRealtimePrefix(string value)
-        {
-            if (value.StartsWith(RealtimePrefix))
-            {
-                return value.Substring(RealtimePrefix.Length);
-            }
             return value;
         }
 

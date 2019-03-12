@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.IO;
-using Storm.GoogleAnalytics.Reporting.Configuration;
+using Storm.GoogleAnalytics.Reporting.v2.Configuration;
 
-namespace Storm.GoogleAnalytics.Reporting.Core.Impl
+namespace Storm.GoogleAnalytics.Reporting.v2.Core.Impl
 {
     public sealed class GoogleAnalyticsResponse : IGoogleAnalyticsResponse
     {
@@ -20,12 +20,11 @@ namespace Storm.GoogleAnalytics.Reporting.Core.Impl
             }
             else
             {
-                throw new ArgumentNullException("writer");
+                throw new ArgumentNullException(nameof(writer));
             }
         }
 
-        internal GoogleAnalyticsResponse(IGoogleAnalyticsRequestConfiguration requestConfig, bool isSuccess, IGoogleAnalyticsDataResponse dataResponse = null,
-            IGoogleAnalyticsErrorResponse errorResponse = null)
+        internal GoogleAnalyticsResponse(IGoogleAnalyticsRequestConfiguration requestConfig, bool isSuccess, IGoogleAnalyticsDataResponse dataResponse = null, IGoogleAnalyticsErrorResponse errorResponse = null)
         {
             Success = isSuccess;
             Data = dataResponse;

@@ -1,18 +1,7 @@
-using System;
-using System.IO;
-using Storm.GoogleAnalytics.Reporting.Core;
+﻿using System;
 
-namespace Storm.GoogleAnalytics.Reporting.Configuration
+namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
 {
-    public interface IGoogleAnalyticsRequestConfigurationExporter
-    {
-        /// <summary>
-        /// Allows your request to be exported as a json object
-        /// </summary>
-        /// <param name="writer"></param>
-        void ExportTo(TextWriter writer);
-    }
-
     public interface IGoogleAnalyticsRequestConfigurer : IGoogleAnalyticsRequestConfigurerMetrics
     {
         /// <summary>
@@ -21,7 +10,7 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration
         /// <param name="dimensions">see <see cref="GaMetadata.Dimensions"/> for standard dimension list</param>
         /// <returns></returns>
         IGoogleAnalyticsRequestConfigurer WithDimensions(params string[] dimensions);
-        
+
         /// <summary>
         /// Provides a filter to the query
         /// </summary>
@@ -30,7 +19,7 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration
         /// <param name="value">filter value</param>
         /// <returns></returns>
         IGoogleAnalyticsRequestCompositeFilterConfigurer FilterBy(string field, string @operator, string value);
-        
+
         /// <summary>
         /// Provides a sort field and direction to the query
         /// </summary>

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
-using Storm.GoogleAnalytics.Reporting.Core;
+using Storm.GoogleAnalytics.Reporting.v2.Core;
 
-namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
+namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
 {
     public class GoogleAnalyticsRequestConfigurer : IGoogleAnalyticsRequestConfiguration, IGoogleAnalyticsRequestCompositeFilterConfigurer, IGoogleAnalyticsRequestCustomConfigurer, IGoogleAnalyticsRequestConfigurationExporter
     {
@@ -21,18 +21,21 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 
         public static GoogleAnalyticsRequestConfigurer LoadFrom(string path)
         {
-            if(!File.Exists(path)) throw new FileNotFoundException("request file not found", path);
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException("Requested file not found", path);
+            }
 
             using (var stream = File.OpenText(path))
             {
                 using (var reader = new JsonTextReader(stream))
                 {
-                    var s = new JsonSerializer()
+                    var s = new JsonSerializer
                     {
                         DateFormatHandling = DateFormatHandling.IsoDateFormat,
                         DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
                         Formatting = Formatting.Indented,
-                        NullValueHandling = NullValueHandling.Ignore,
+                        NullValueHandling = NullValueHandling.Ignore
                     };
 
                     s.Converters.Add(new GoogleAnalyticsRequestConfigurerConverter());
@@ -43,16 +46,19 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 
         public void ExportTo(TextWriter writer)
         {
-            if(writer == null) throw new ArgumentNullException("writer");
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
 
             using (var jsonWriter = new JsonTextWriter(writer))
             {
-                var s = new JsonSerializer()
+                var s = new JsonSerializer
                 {
                     DateFormatHandling = DateFormatHandling.IsoDateFormat,
                     DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
                     Formatting = Formatting.Indented,
-                    NullValueHandling = NullValueHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
                 };
                 s.Serialize(jsonWriter, this);
             }
@@ -82,7 +88,10 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 
         public IGoogleAnalyticsRequestConfigurerMetrics ForDateRange(DateTime startDate, DateTime? endDate = null)
         {
-            if(startDate > endDate.GetValueOrDefault(DateTime.Today)) throw new ArgumentOutOfRangeException("startDate", "startDate must be less than or equal to endDate");
+            if (startDate > endDate.GetValueOrDefault(DateTime.Today))
+            {
+                throw new ArgumentOutOfRangeException(nameof(startDate), "startDate must be less than or equal to endDate");
+            }
 
             StartDate = startDate;
             EndDate = endDate.GetValueOrDefault(DateTime.Today);
@@ -101,39 +110,10 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
             return this;
         }
 
-        IGoogleAnalyticsRequestCompositeFilterConfigurer IGoogleAnalyticsRequestCompositeFilterConfigurer.OrFilterBy(string field, string @operator, string value)
-        {
-            if (!string.IsNullOrWhiteSpace(Filter))
-            {
-                Filter = string.Format("{0}{1}{2}", Filter, GaMetadata.FilterOperator.Or, BuildFilter(field, @operator, value));
-                return this;
-            }
-            return FilterBy(field, @operator, value);
-        }
-
-        IGoogleAnalyticsRequestCompositeFilterConfigurer IGoogleAnalyticsRequestCompositeFilterConfigurer.AndFilterBy(string field, string @operator, string value)
-        {
-            if (!string.IsNullOrWhiteSpace(Filter))
-            {
-                Filter = string.Format("{0}{1}{2}", Filter, GaMetadata.FilterOperator.And, BuildFilter(field, @operator, value));
-                return this;
-            }
-            return FilterBy(field, @operator, value);
-        }
-
         public IGoogleAnalyticsRequestCompositeFilterConfigurer FilterBy(string field, string @operator, string value)
         {
             Filter = BuildFilter(field, @operator, value);
             return this;
-        }
-
-        private static string BuildFilter(string field, string @operator, string value)
-        {
-            if (string.IsNullOrWhiteSpace(field)) throw new ArgumentNullException("field", "filter field must be specified, see GaMetadata");
-            if (string.IsNullOrWhiteSpace(@operator)) throw new ArgumentNullException("@operator", "filter operator must be specified, see GaMetadata.FilterOperator");
-            if (string.IsNullOrWhiteSpace(value)) throw new ArgumentNullException("value", "filter value must be specified");
-
-            return string.Format("{0}{1}{2}", GaMetadata.WithPrefix(field), @operator, value);
         }
 
         public IGoogleAnalyticsRequestConfigurer WithCustomFilter(string filter)
@@ -150,23 +130,35 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
             }
             else
             {
-                Sort = string.Format("{0},{1}", Sort, BuildSort(field, isDescending));
+                Sort = $"{Sort},{BuildSort(field, isDescending)}";
             }
             return this;
         }
 
-        private static string BuildSort(string field, bool descending = false)
-        {
-            if (string.IsNullOrWhiteSpace(field)) throw new ArgumentNullException("field", "sort field must be specified, see GaMetadata");
-
-            return string.Format("{0}{1}", descending ? "-" : "", GaMetadata.WithPrefix(field));
-        }
-
-        #region Custom
         public IGoogleAnalyticsRequestConfigurer Custom(Action<IGoogleAnalyticsRequestCustomConfigurer> custom)
         {
             custom(this);
             return this;
+        }
+
+        public IGoogleAnalyticsRequestCompositeFilterConfigurer OrFilterBy(string field, string @operator, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(Filter))
+            {
+                Filter = string.Concat(Filter, GaMetadata.FilterOperator.Or, BuildFilter(field, @operator, value));
+                return this;
+            }
+            return FilterBy(field, @operator, value);
+        }
+
+        public IGoogleAnalyticsRequestCompositeFilterConfigurer AndFilterBy(string field, string @operator, string value)
+        {
+            if (!string.IsNullOrWhiteSpace(Filter))
+            {
+                Filter = string.Concat(Filter, GaMetadata.FilterOperator.And, BuildFilter(field, @operator, value));
+                return this;
+            }
+            return FilterBy(field, @operator, value);
         }
 
         IGoogleAnalyticsRequestCustomConfigurer IGoogleAnalyticsRequestCustomConfigurer.Segment(string value)
@@ -198,10 +190,39 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 
         IGoogleAnalyticsRequestCustomConfigurer IGoogleAnalyticsRequestCustomConfigurer.MaxResults(int value)
         {
-            if (value < 1 || value > 10000) throw new ArgumentOutOfRangeException("value", "max results must be between 1 and 10000");
+            if (value < 1 || value > 10000)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "max results must be between 1 and 10000");
+            }
             MaxResults = value;
             return this;
         }
-        #endregion
+
+        private static string BuildFilter(string field, string @operator, string value)
+        {
+            if (string.IsNullOrWhiteSpace(field))
+            {
+                throw new ArgumentNullException(nameof(field), "filter field must be specified, see GaMetadata");
+            }
+
+            if (string.IsNullOrWhiteSpace(@operator))
+            {
+                throw new ArgumentNullException(nameof(@operator), "filter operator must be specified, see GaMetadata.FilterOperator");
+            }
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentNullException(nameof(value), "filter value must be specified");
+            }
+
+            return string.Concat(GaMetadata.WithPrefix(field), @operator, value);
+        }
+
+        private static string BuildSort(string field, bool descending = false)
+        {
+            if (string.IsNullOrWhiteSpace(field)) throw new ArgumentNullException(nameof(field), "sort field must be specified, see GaMetadata");
+
+            return string.Concat(descending ? "-" : "", GaMetadata.WithPrefix(field));
+        }
     }
 }

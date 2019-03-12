@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 
-namespace Storm.GoogleAnalytics.Reporting.Core
+namespace Storm.GoogleAnalytics.Reporting.v2.Core
 {
     public interface IGoogleAnalyticsDataResponse
     {

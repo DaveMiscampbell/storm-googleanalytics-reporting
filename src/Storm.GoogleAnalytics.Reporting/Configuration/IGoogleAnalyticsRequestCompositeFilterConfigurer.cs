@@ -1,4 +1,4 @@
-namespace Storm.GoogleAnalytics.Reporting.Configuration
+﻿namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
 {
     public interface IGoogleAnalyticsRequestCompositeFilterConfigurer : IGoogleAnalyticsRequestConfigurer
     {

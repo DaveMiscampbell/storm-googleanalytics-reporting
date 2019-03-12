@@ -1,6 +1,6 @@
-using System.IO;
+﻿using System.IO;
 
-namespace Storm.GoogleAnalytics.Reporting.Core
+namespace Storm.GoogleAnalytics.Reporting.v2.Core
 {
     public interface IGoogleAnalyticsResponse
     {
