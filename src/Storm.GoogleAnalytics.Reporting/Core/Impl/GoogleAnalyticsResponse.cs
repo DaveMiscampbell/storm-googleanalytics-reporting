@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using Storm.GoogleAnalytics.Reporting.v2.Configuration;
+using Storm.GoogleAnalytics.Reporting.Configuration;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Core.Impl
+namespace Storm.GoogleAnalytics.Reporting.Core.Impl
 {
     public sealed class GoogleAnalyticsResponse : IGoogleAnalyticsResponse
     {

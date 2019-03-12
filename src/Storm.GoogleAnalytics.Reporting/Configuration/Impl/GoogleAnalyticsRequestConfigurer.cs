@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
-using Storm.GoogleAnalytics.Reporting.v2.Core;
+using Storm.GoogleAnalytics.Reporting.Core;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
+namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 {
     public class GoogleAnalyticsRequestConfigurer : IGoogleAnalyticsRequestConfiguration, IGoogleAnalyticsRequestCompositeFilterConfigurer, IGoogleAnalyticsRequestCustomConfigurer, IGoogleAnalyticsRequestConfigurationExporter
     {

@@ -3,7 +3,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
+namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 {
     public class GoogleAnalyticsRequestConfigurerConverter : JsonConverter
     {

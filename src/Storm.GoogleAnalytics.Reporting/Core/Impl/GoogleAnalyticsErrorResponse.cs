@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Core.Impl
+namespace Storm.GoogleAnalytics.Reporting.Core.Impl
 {
     public sealed class GoogleAnalyticsErrorResponse : IGoogleAnalyticsErrorResponse
     {

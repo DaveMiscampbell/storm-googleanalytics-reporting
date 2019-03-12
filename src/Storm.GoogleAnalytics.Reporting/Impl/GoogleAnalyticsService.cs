@@ -9,12 +9,12 @@ using Google.Apis.Analytics.v3.Data;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Http;
 using Google.Apis.Services;
-using Storm.GoogleAnalytics.Reporting.v2.Configuration;
-using Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl;
-using Storm.GoogleAnalytics.Reporting.v2.Core;
-using Storm.GoogleAnalytics.Reporting.v2.Core.Impl;
+using Storm.GoogleAnalytics.Reporting.Configuration;
+using Storm.GoogleAnalytics.Reporting.Configuration.Impl;
+using Storm.GoogleAnalytics.Reporting.Core;
+using Storm.GoogleAnalytics.Reporting.Core.Impl;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Impl
+namespace Storm.GoogleAnalytics.Reporting.Impl
 {
     public sealed class GoogleAnalyticsService : IGoogleAnalyticsService
     {

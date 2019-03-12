@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Google.Apis.Analytics.v3;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
+namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 {
     public class GoogleAnalyticsServiceConfigurer : IGoogleAnalyticsServiceConfigurer, IGoogleAnalyticsServiceConfiguration
     {

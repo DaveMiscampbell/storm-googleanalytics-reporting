@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 
-namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
+namespace Storm.GoogleAnalytics.Reporting.Configuration
 {
     public interface IGoogleAnalyticsServiceConfiguration
     {

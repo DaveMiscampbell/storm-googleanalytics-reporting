@@ -1,8 +1,8 @@
 ﻿using System;
-using Storm.GoogleAnalytics.Reporting.v2.Configuration;
-using Storm.GoogleAnalytics.Reporting.v2.Core;
+using Storm.GoogleAnalytics.Reporting.Configuration;
+using Storm.GoogleAnalytics.Reporting.Core;
 
-namespace Storm.GoogleAnalytics.Reporting.v2
+namespace Storm.GoogleAnalytics.Reporting
 {
     public interface IGoogleAnalyticsService
     {

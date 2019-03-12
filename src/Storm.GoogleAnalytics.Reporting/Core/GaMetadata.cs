@@ -1,4 +1,4 @@
-﻿namespace Storm.GoogleAnalytics.Reporting.v2.Core
+﻿namespace Storm.GoogleAnalytics.Reporting.Core
 {
     public static class GaMetadata
     {
