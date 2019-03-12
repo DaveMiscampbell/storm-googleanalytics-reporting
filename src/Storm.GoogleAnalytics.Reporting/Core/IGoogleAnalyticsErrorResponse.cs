@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Storm.GoogleAnalytics.Reporting.Core
+namespace Storm.GoogleAnalytics.Reporting.v2.Core
 {
     public interface IGoogleAnalyticsErrorResponse
     {

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Storm.GoogleAnalytics.Reporting.Configuration
+namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
 {
     public interface IGoogleAnalyticsRequestConfigurerDateRange : IGoogleAnalyticsRequestConfigurerProfileId
     {

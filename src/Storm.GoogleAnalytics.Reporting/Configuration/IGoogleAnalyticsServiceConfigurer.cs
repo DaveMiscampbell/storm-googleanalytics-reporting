@@ -1,6 +1,7 @@
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
+using Google.Apis.AnalyticsReporting.v4;
 
-namespace Storm.GoogleAnalytics.Reporting.Configuration
+namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
 {
     public interface IGoogleAnalyticsServiceConfigurer
     {
@@ -42,7 +43,7 @@ namespace Storm.GoogleAnalytics.Reporting.Configuration
         /// <summary>
         /// Defines the scope to request when authenticating against the Google Analytics API, the default scope requests readonly access to analytics
         /// </summary>
-        /// <param name="value">A complete scope string, as defined in <see cref="Google.Apis.Analytics.v3.AnalyticsService.Scope"/></param>
+        /// <param name="value">A complete scope string, as defined in <see cref="AnalyticsReportingService.Scope"/></param>
         /// <returns></returns>
         IGoogleAnalyticsServiceConfigurer WithScope(string value);
         /// <summary>

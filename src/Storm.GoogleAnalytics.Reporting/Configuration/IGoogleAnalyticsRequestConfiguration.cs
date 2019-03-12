@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace Storm.GoogleAnalytics.Reporting.Configuration
+namespace Storm.GoogleAnalytics.Reporting.v2.Configuration
 {
     public interface IGoogleAnalyticsRequestConfiguration
     {

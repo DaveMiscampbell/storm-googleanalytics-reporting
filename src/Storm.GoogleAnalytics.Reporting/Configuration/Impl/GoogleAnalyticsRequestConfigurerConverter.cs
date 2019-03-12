@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
+namespace Storm.GoogleAnalytics.Reporting.v2.Configuration.Impl
 {
-    internal class GoogleAnalyticsRequestConfigurerConverter : JsonConverter
+    public class GoogleAnalyticsRequestConfigurerConverter : JsonConverter
     {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {

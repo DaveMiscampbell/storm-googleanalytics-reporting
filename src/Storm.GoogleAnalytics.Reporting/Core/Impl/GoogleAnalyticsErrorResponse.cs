@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace Storm.GoogleAnalytics.Reporting.Core.Impl
+namespace Storm.GoogleAnalytics.Reporting.v2.Core.Impl
 {
     public sealed class GoogleAnalyticsErrorResponse : IGoogleAnalyticsErrorResponse
     {
@@ -10,7 +10,7 @@ namespace Storm.GoogleAnalytics.Reporting.Core.Impl
             Exception = exception;
         }
 
-        public string Message { get; private set; }
-        public Exception Exception { get; private set; }
+        public string Message { get; }
+        public Exception Exception { get; }
     }
 }
