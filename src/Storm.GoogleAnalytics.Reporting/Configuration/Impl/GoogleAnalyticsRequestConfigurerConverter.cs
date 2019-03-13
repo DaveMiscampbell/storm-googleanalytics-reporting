@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Storm.GoogleAnalytics.Reporting.Configuration.Impl
 {
-    public class GoogleAnalyticsRequestConfigurerConverter : JsonConverter
+    internal class GoogleAnalyticsRequestConfigurerConverter : JsonConverter
     {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {

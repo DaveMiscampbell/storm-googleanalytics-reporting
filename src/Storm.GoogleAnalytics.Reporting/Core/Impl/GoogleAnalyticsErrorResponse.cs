@@ -10,7 +10,7 @@ namespace Storm.GoogleAnalytics.Reporting.Core.Impl
             Exception = exception;
         }
 
-        public string Message { get; }
-        public Exception Exception { get; }
+        public string Message { get; private set; }
+        public Exception Exception { get; private set; }
     }
 }
