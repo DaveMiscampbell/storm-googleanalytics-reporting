@@ -163,25 +163,6 @@ Task("Create-NuGet-Packages")
         DotNetCorePack(projectPath.ToString(), settings);
     });
 
-// Task("Create-NuGet-Packages")
-//     .IsDependentOn("Build")
-//     .IsDependentOn("Copy-Files")
-//     .Does(() => 
-// {
-//     var outputDirectory = artifacts +"/packages";
-//     EnsureDirectoryExists(outputDirectory);
-
-//     var settings = new NuGetPackSettings {
-//         Properties = new Dictionary<string, string> { { "Configuration", configuration }},
-//         Symbols = false,
-//         NoPackageAnalysis = true,
-//         Version = versionInfo.NuGetVersionV2,
-//         OutputDirectory = outputDirectory,
-//         IncludeReferencedProjects = true
-//     };
-//     NuGetPack("./src/Storm.GoogleAnalytics.Reporting/Storm.GoogleAnalytics.Reporting.csproj", settings);
-// });
-
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
