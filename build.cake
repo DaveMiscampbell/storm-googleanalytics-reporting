@@ -1,5 +1,6 @@
 #tool "GitVersion.CommandLine"
-#tool "xunit.runner.console"
+#tool "ReportUnit"
+#tool "nuget:?package=NunitXml.TestLogger"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -8,6 +9,7 @@
 var target                  = Argument("target", "Default");
 var configuration           = Argument("configuration", "Release");
 var solutionPath            = MakeAbsolute(File(Argument("solutionPath", "./Storm.GoogleAnalytics.sln")));
+var solutionFolder          = MakeAbsolute(Directory(Argument("solutionPath", "./")));
 
 var testProjects            = Enumerable.Empty<string>();
 
@@ -19,19 +21,36 @@ var testAssemblyBinFormat   = "./tests/{0}/bin/" +configuration +"/{0}.dll";
 
 var artifacts               = MakeAbsolute(Directory(Argument("artifactPath", "./artifacts")));
 var buildOutput             = MakeAbsolute(Directory(artifacts +"/build/"));
+
+var testResults     	    = MakeAbsolute(Directory(artifacts + "/test-results"));
+var testLog			        = File(testResults + "/TestLog.log");
+var testReport              = File(testResults + "/TestReport.html");
+
+GitVersion versionInfo      = null;
 var versionAssemblyInfo     = MakeAbsolute(File(Argument("versionAssemblyInfo", "VersionAssemblyInfo.cs")));
 
 SolutionParserResult solution               = null;
-GitVersion versionInfo                      = null;
+DirectoryPath projectDirectory              = null;
+FilePath projectPath                        = null;
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
 
-Setup(() => {
-    if(!FileExists(solutionPath)) throw new Exception(string.Format("Solution file not found - {0}", solutionPath.ToString()));
+Setup(ctx => {
+    if(!FileExists(solutionPath)) {
+        throw new Exception(string.Format("Solution file not found - {0}", solutionPath.ToString()));
+    }
     solution = ParseSolution(solutionPath.ToString());
+
     Information("[Setup] Using Solution '{0}'", solutionPath.ToString());
+
+    var project = solution.Projects.FirstOrDefault();
+    if(project == null) {
+        throw new Exception(string.Format("Unable to find any projects in solution '{0}'", solutionPath.GetFilenameWithoutExtension()));
+    }
+    projectPath = project.Path;
+    projectDirectory = System.IO.Path.GetDirectoryName(projectPath.ToString());
 });
 
 Task("Clean")
@@ -51,7 +70,9 @@ Task("Restore-NuGet-Packages")
     .IsDependentOn("Clean")
     .Does(() =>
 {
-    NuGetRestore(solutionPath, new NuGetRestoreSettings());
+    DotNetCoreRestore(new DotNetCoreRestoreSettings {
+        WorkingDirectory = solutionFolder
+    });
 });
 
 Task("Update-Version-Info")
@@ -82,67 +103,6 @@ Task("CreateVersionAssemblyInfo")
     });
 });
 
-Task("Build")
-    .IsDependentOn("Restore-NuGet-Packages")
-    .IsDependentOn("Update-Version-Info")
-    .Does(() =>
-{
-    MSBuild(solutionPath, settings => settings
-        .WithProperty("TreatWarningsAsErrors","true")
-        .WithProperty("UseSharedCompilation", "false")
-        .WithProperty("AutoParameterizationWebConfigConnectionStrings", "false")
-        .SetVerbosity(Verbosity.Quiet)
-        .SetConfiguration(configuration)
-        .WithTarget("Clean;Build")
-    );
-});
-
-Task("Copy-Files")
-    .IsDependentOn("Build")
-    .Does(() => 
-{
-    foreach(var project in solution.Projects) {
-        var projectName = project.Name;
-        var projectDir = project.Path.GetDirectory();
-        var projectBuildDir = buildOutput +"/" +projectName +"/lib/net45";
-        EnsureDirectoryExists(projectBuildDir);
-        CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".dll", projectBuildDir);
-        CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".xml", projectBuildDir);
-        CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".pdb", projectBuildDir);
-    }
-});
-
-Task("Run-Unit-Tests")
-    .IsDependentOn("Build")
-    .WithCriteria(() => testProjects.Any())
-    .Does(() => 
-{
-    var testResultsPath = MakeAbsolute(Directory(artifacts + "/test-results"));
-
-    XUnit2(testProjects.Select(x => string.Format(testAssemblyBinFormat, x)), new XUnit2Settings() {
-        OutputDirectory = testResultsPath
-    });
-});
-
-Task("Create-NuGet-Packages")
-    .IsDependentOn("Build")
-    .IsDependentOn("Copy-Files")
-    .Does(() => 
-{
-    var outputDirectory = artifacts +"/packages";
-    EnsureDirectoryExists(outputDirectory);
-
-    var settings = new NuGetPackSettings {
-        Properties = new Dictionary<string, string> { { "Configuration", configuration }},
-        Symbols = false,
-        NoPackageAnalysis = true,
-        Version = versionInfo.NuGetVersionV2,
-        OutputDirectory = outputDirectory,
-        IncludeReferencedProjects = true
-    };
-    NuGetPack("./src/Storm.GoogleAnalytics.Reporting/Storm.GoogleAnalytics.Reporting.csproj", settings);
-});
-
 Task("Update-AppVeyor-Build-Number")
     .IsDependentOn("Update-Version-Info")
     .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
@@ -150,6 +110,77 @@ Task("Update-AppVeyor-Build-Number")
 {
     AppVeyor.UpdateBuildVersion(versionInfo.FullSemVer +" | " +AppVeyor.Environment.Build.Number);
 });
+
+Task("Build")
+    .IsDependentOn("Restore-NuGet-Packages")
+    .IsDependentOn("Update-Version-Info")
+    .Does(() =>
+{
+    DotNetCorePublish(projectPath.ToString(), new DotNetCorePublishSettings {
+        OutputDirectory = Directory(artifacts + "/build/"),
+        Configuration = configuration,
+        NoRestore = true
+    });
+});
+
+// Task("Copy-Files")
+//     .IsDependentOn("Build")
+//     .Does(() => 
+// {
+//     foreach(var project in solution.Projects) {
+//         var projectName = project.Name;
+//         var projectDir = project.Path.GetDirectory();
+//         var projectBuildDir = buildOutput +"/" +projectName +"/lib/net45";
+//         EnsureDirectoryExists(projectBuildDir);
+//         CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".dll", projectBuildDir);
+//         CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".xml", projectBuildDir);
+//         CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".pdb", projectBuildDir);
+//     }
+// });
+
+Task("Run-Unit-Tests")
+    .IsDependentOn("Build")
+    .WithCriteria(() => testProjects.Any())
+    .Does(() => 
+{
+    var testSettings = new DotNetCoreTestSettings {
+        ResultsDirectory = testResults,
+        Configuration = configuration,
+        Logger = "nunit",
+        TestAdapterPath = Directory("./"),
+        DiagnosticFile = testLog
+    };
+
+    foreach(var assembly in testProjects) {
+        DotNetCoreTest(assembly, testSettings);
+    }
+}).Finally(() => {
+    ReportUnit(testResults + "/TestResults.xml", testReport);
+    if(AppVeyor.IsRunningOnAppVeyor) {
+        AppVeyor.UploadTestResults(testResults + "/TestResults.xml", AppVeyorTestResultsType.XUnit);
+        AppVeyor.UploadArtifact(testLog);
+        AppVeyor.UploadArtifact(testReport);
+    }
+});
+
+// Task("Create-NuGet-Packages")
+//     .IsDependentOn("Build")
+//     .IsDependentOn("Copy-Files")
+//     .Does(() => 
+// {
+//     var outputDirectory = artifacts +"/packages";
+//     EnsureDirectoryExists(outputDirectory);
+
+//     var settings = new NuGetPackSettings {
+//         Properties = new Dictionary<string, string> { { "Configuration", configuration }},
+//         Symbols = false,
+//         NoPackageAnalysis = true,
+//         Version = versionInfo.NuGetVersionV2,
+//         OutputDirectory = outputDirectory,
+//         IncludeReferencedProjects = true
+//     };
+//     NuGetPack("./src/Storm.GoogleAnalytics.Reporting/Storm.GoogleAnalytics.Reporting.csproj", settings);
+// });
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
@@ -160,13 +191,13 @@ Task("Default")
     .IsDependentOn("Update-AppVeyor-Build-Number")
     .IsDependentOn("Build")
     .IsDependentOn("Run-Unit-Tests")
-    .IsDependentOn("Package")
+    // .IsDependentOn("Package")
     ;
 
 
 Task("Package")
-    .IsDependentOn("Build")
-    .IsDependentOn("Create-NuGet-Packages");
+    .IsDependentOn("Build");
+    // .IsDependentOn("Create-NuGet-Packages");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION

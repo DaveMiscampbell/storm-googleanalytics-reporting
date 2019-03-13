@@ -1,8 +1,10 @@
 mode: ContinuousDelivery
 branches:
   master:
+    regex: master
     mode: ContinuousDeployment
     tag: beta
-  (pull|pull\-requests|pr)[/-]: {}
+  pull-request:
+    regex: (pull|pull\-requests|pr)[/-]
 ignore:
   sha: []

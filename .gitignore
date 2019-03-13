@@ -121,3 +121,7 @@ build/
 /artifacts/
 
 .vs/
+
+# CakeBuild
+tools/
+!tools/packages.config
