@@ -1,12 +1,12 @@
 version: '{build}'
-os: Visual Studio 2015
+os: Visual Studio 2017
 skip_branch_with_pr: true
 nuget:
   disable_publish_on_pr: true
 cache: 
-- packages -> src\**\packages.config
+- packages -> src\**\*.csproj
 build_script:
-- ps: .\build.ps1 -Target "Default" -Configuration "Release"
+- ps: .\build.ps1 -Target "Default" -Configuration "Release" -Verbosity "Diagnostic"
 test: off
 artifacts:
 - path: artifacts\packages\*.nupkg

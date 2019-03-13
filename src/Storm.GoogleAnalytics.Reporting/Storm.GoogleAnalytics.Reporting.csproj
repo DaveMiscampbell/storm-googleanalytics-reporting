@@ -2,14 +2,39 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- Disable AutoVersioning -->
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <!-- Package Properties -->
+    <Authors>Phil Oyston, Dave Branagh-Miscampbell</Authors>
+    <Company>Storm ID Ltd</Company>
+    <Description>Provides a fluent interface to the GA v3 reporting API (see https://developers.google.com/analytics/devguides/reporting/core/v3/)</Description>
+    <Copyright>Phil Oyston, Storm ID Ltd.</Copyright>
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/stormid/storm-googleanalytics-reporting</PackageProjectUrl>
+    <PackageIconUrl>http://stormid.com/media/48267/logo.jpg</PackageIconUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/stormid/storm-googleanalytics-reporting.git</RepositoryUrl>
+    <!-- Source Link -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Data" Version="3.0.0" />
     <PackageReference Include="Google.Apis.Analytics.v3" Version="1.38.0.1306" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All"/>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="Zlib.Portable" Version="1.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../VersionAssemblyInfo.cs">
+      <Link>Properties\VersionAssemblyInfo.cs</Link>
+    </Compile>
   </ItemGroup>
 
 </Project>

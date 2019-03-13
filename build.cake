@@ -123,21 +123,6 @@ Task("Build")
     });
 });
 
-// Task("Copy-Files")
-//     .IsDependentOn("Build")
-//     .Does(() => 
-// {
-//     foreach(var project in solution.Projects) {
-//         var projectName = project.Name;
-//         var projectDir = project.Path.GetDirectory();
-//         var projectBuildDir = buildOutput +"/" +projectName +"/lib/net45";
-//         EnsureDirectoryExists(projectBuildDir);
-//         CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".dll", projectBuildDir);
-//         CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".xml", projectBuildDir);
-//         CopyFiles(projectDir +"/bin/" +configuration +"/" +projectName +".pdb", projectBuildDir);
-//     }
-// });
-
 Task("Run-Unit-Tests")
     .IsDependentOn("Build")
     .WithCriteria(() => testProjects.Any())
@@ -162,6 +147,21 @@ Task("Run-Unit-Tests")
         AppVeyor.UploadArtifact(testReport);
     }
 });
+
+Task("Create-NuGet-Packages")
+    .IsDependentOn("Build")
+    .Does(() => {
+        var outputDirectory = artifacts + "/packages";
+        EnsureDirectoryExists(outputDirectory);
+
+        var settings = new DotNetCorePackSettings {
+            ArgumentCustomization = args => args.Append($"-p:Version={versionInfo.NuGetVersion}"),
+            Configuration = configuration,
+            OutputDirectory = outputDirectory,
+        };
+
+        DotNetCorePack(projectPath.ToString(), settings);
+    });
 
 // Task("Create-NuGet-Packages")
 //     .IsDependentOn("Build")
@@ -191,13 +191,13 @@ Task("Default")
     .IsDependentOn("Update-AppVeyor-Build-Number")
     .IsDependentOn("Build")
     .IsDependentOn("Run-Unit-Tests")
-    // .IsDependentOn("Package")
+    .IsDependentOn("Package")
     ;
 
 
 Task("Package")
-    .IsDependentOn("Build");
-    // .IsDependentOn("Create-NuGet-Packages");
+    .IsDependentOn("Build")
+    .IsDependentOn("Create-NuGet-Packages");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION
